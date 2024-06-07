@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Picker } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Picker, Alert } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
 const AuthScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [userType, setUserType] = useState('');
   const [isLogin, setIsLogin] = useState(true);
 
@@ -15,28 +16,23 @@ const AuthScreen = ({ navigation }) => {
   const handleAuthentication = async () => {
     try {
       if (isLogin) {
-        console.log('Attempting to sign in with email:', email);
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log('UserCredential:', userCredential);
-        if (userCredential.user) {
-          navigation.replace('HomeScreen');
-          console.log('User signed in successfully!');
-        } else {
-          console.error('No user found after sign in');
-        }
+        Alert.alert('Success', 'User signed in successfully!');
+        navigation.replace('HomeScreen', { user: { email, name: userCredential.user.displayName } });
       } else {
-        console.log('Attempting to create user with email:', email);
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", userCredential.user.uid), { userType });
-        if (userCredential.user) {
-          navigation.replace('HomeScreen');
-          console.log('User created successfully!');
-        } else {
-          console.error('No user found after account creation');
+        
+        // Verifica se o tipo de usuário está definido e se não é um login
+        if (userType && !isLogin) {
+          await setDoc(doc(db, "users", userCredential.user.uid), { userType, email, name });
         }
+        
+        Alert.alert('Success', 'User created successfully!');
+        navigation.replace('HomeScreen', { user: { email, name } });
       }
     } catch (error) {
       console.error('Authentication error:', error.message);
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -58,15 +54,23 @@ const AuthScreen = ({ navigation }) => {
         secureTextEntry
       />
       {!isLogin && (
-        <Picker
-          selectedValue={userType}
-          onValueChange={(itemValue) => setUserType(itemValue)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Select User Type" value="" />
-          <Picker.Item label="Pescador" value="pescador" />
-          <Picker.Item label="Empresa de Coleta de Lixo" value="empresa" />
-        </Picker>
+        <>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder="Name"
+          />
+          <Picker
+            selectedValue={userType}
+            onValueChange={(itemValue) => setUserType(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select User Type" value="" />
+            <Picker.Item label="Pescador" value="pescador" />
+            <Picker.Item label="Empresa de Coleta de Lixo" value="empresa" />
+          </Picker>
+        </>
       )}
       <View style={styles.buttonContainer}>
         <Button title={isLogin ? 'Sign In' : 'Sign Up'} onPress={handleAuthentication} color="#3498db" />

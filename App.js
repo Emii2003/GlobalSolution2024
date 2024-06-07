@@ -1,11 +1,16 @@
+// App.js
+
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import AuthScreen from './screens/AuthScreen';
 import HomeScreen from './screens/HomeScreen';
+import EquipmentFormScreen from './screens/EquipmentFormScreen';
+import CallFormScreen from './screens/CallFormScreen'; // Importa o componente CallFormScreen
+
 // Configuração do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDnTuWRnG8t6pSOxzoV96SQkUFGdINnYDk",
@@ -17,6 +22,7 @@ const firebaseConfig = {
   measurementId: "G-VF2C36NDBN"
 };
 
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -24,15 +30,12 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   const [user, setUser] = useState(null);
-  const [userType, setUserType] = useState('');
-
   const auth = getAuth(app);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        setUser({ ...user, userType: userDoc.data().userType });
+        setUser({ ...user });
       } else {
         setUser(null);
       }
@@ -54,15 +57,12 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {user ? (
-          <Stack.Screen name="HomeScreen" component={HomeScreen}>
-            {props => <HomeScreen {...props} user={user} handleLogout={handleLogout} />}
-          </Stack.Screen>
-        ) : (
-          <Stack.Screen name="AuthScreen">
-            {props => <AuthScreen {...props} />}
-          </Stack.Screen>
-        )}
+        <Stack.Screen name="AuthScreen" component={AuthScreen} />
+        <Stack.Screen name="HomeScreen" >
+          {props => <HomeScreen {...props} user={user} handleLogout={handleLogout} />}
+        </Stack.Screen>
+        <Stack.Screen name="EquipmentForm" component={EquipmentFormScreen} />
+        <Stack.Screen name="CallForm" component={CallFormScreen} /> 
       </Stack.Navigator>
     </NavigationContainer>
   );
