@@ -1,13 +1,14 @@
-// CallFormScreen.js
-
 import React, { useState } from 'react';
-import { View, Text, Button, TextInput, StyleSheet } from 'react-native';
-import { getFirestore, addDoc, collection } from 'firebase/firestore';
+import { View, Text, Button, TextInput, Alert } from 'react-native';
+import { getFirestore, addDoc, collection, FieldValue, serverTimestamp  } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 
 const CallFormScreen = () => {
+  const navigation = useNavigation();
+
+  const [title, setTitle] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
-  const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
   const [equipmentId, setEquipmentId] = useState('');
 
@@ -15,89 +16,70 @@ const CallFormScreen = () => {
 
   const handleAddCall = async () => {
     try {
-      // Verifica se todos os campos foram preenchidos
-      if (latitude.trim() !== '' && longitude.trim() !== '' && date.trim() !== '' && description.trim() !== '' && equipmentId.trim() !== '') {
-        // Adiciona o chamado ao Firestore
-        await addDoc(collection(db, 'calls'), {
+      if (title.trim() !== '' && latitude.trim() !== '' && longitude.trim() !== '' && description.trim() !== '' && equipmentId.trim() !== '') {
+        await addDoc(collection(db, 'chamados'), {
+          title,
           latitude,
           longitude,
-          date,
+          date: serverTimestamp(),
           description,
           equipmentId
         });
-        console.log('Call added successfully!');
-        // Limpa os campos após adicionar o chamado
+        Alert.alert('Sucesso', 'Chamado adicionado com sucesso!');
+        setTitle('');
         setLatitude('');
         setLongitude('');
-        setDate('');
         setDescription('');
         setEquipmentId('');
+        navigation.navigate('HomeScreen');
       } else {
-        console.error('All fields are required!');
+        Alert.alert('Erro', 'Todos os campos são obrigatórios!');
       }
     } catch (error) {
-      console.error('Error adding call:', error.message);
+      console.error('Erro ao adicionar chamado:', error.message);
+      Alert.alert('Erro', 'Erro ao adicionar chamado: ' + error.message);
     }
   };
 
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Add Call</Text>
+    <View>
+      <Text>Adicionar Chamado</Text>
       <TextInput
-        style={styles.input}
+        value={title}
+        onChangeText={setTitle}
+        placeholder="Título"
+      />
+      <TextInput
         value={latitude}
         onChangeText={setLatitude}
         placeholder="Latitude"
+        keyboardType="numeric"
       />
       <TextInput
-        style={styles.input}
         value={longitude}
         onChangeText={setLongitude}
         placeholder="Longitude"
+        keyboardType="numeric"
       />
       <TextInput
-        style={styles.input}
-        value={date}
-        onChangeText={setDate}
-        placeholder="Date"
-      />
-      <TextInput
-        style={styles.input}
         value={description}
         onChangeText={setDescription}
-        placeholder="Description"
+        placeholder="Descrição"
       />
-      <TextInput
-        style={styles.input}
-        value={equipmentId}
-        onChangeText={setEquipmentId}
-        placeholder="Equipment ID"
-      />
-      <Button title="Add Call" onPress={handleAddCall} />
+      <Picker
+        selectedValue={equipmentId}
+        onValueChange={(itemValue) => setEquipmentId(itemValue)}
+      >
+        <Picker.Item label="Selecione um equipamento" value="" />
+        <Picker.Item label="Rede de Pesca" value="rede_de_pesca" />
+        <Picker.Item label="Cana de Pescar" value="cana_de_pescar" />
+        <Picker.Item label="Anzol" value="anzol" />
+        <Picker.Item label="Isca Artificial" value="isca_artificial" />
+      </Picker>
+      <Button title="Adicionar Chamado" onPress={handleAddCall} />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  input: {
-    width: '100%',
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
-});
 
 export default CallFormScreen;

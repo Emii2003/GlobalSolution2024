@@ -17,40 +17,42 @@ const AuthScreen = ({ navigation }) => {
     try {
       if (isLogin) {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        Alert.alert('Success', 'User signed in successfully!');
-        navigation.replace('HomeScreen', { user: { email, name: userCredential.user.displayName } });
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        const userData = userDoc.data();
+        navigation.replace('HomeScreen', { user: { ...userCredential.user, ...userData } });
+        Alert.alert('Sucesso', 'Usuário logado com sucesso!');
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // Verifica se o tipo de usuário está definido e se não é um login
-        if (userType && !isLogin) {
-          await setDoc(doc(db, "users", userCredential.user.uid), { userType, email, name });
-        }
-        
-        Alert.alert('Success', 'User created successfully!');
-        navigation.replace('HomeScreen', { user: { email, name } });
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          email,
+          name,
+          userType,
+        });
+        navigation.replace('HomeScreen', { user: { email, name, userType } });
+        Alert.alert('Sucesso', 'Usuário criado com sucesso!');
       }
     } catch (error) {
-      console.error('Authentication error:', error.message);
-      Alert.alert('Error', error.message);
+      console.error('Erro de autenticação:', error.message);
+      Alert.alert('Erro', error.message);
     }
   };
 
   return (
     <View style={styles.authContainer}>
-      <Text style={styles.title}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
+      <Text style={styles.title}>{isLogin ? 'Entrar' : 'Registrar'}</Text>
       <TextInput
         style={styles.input}
         value={email}
         onChangeText={setEmail}
         placeholder="Email"
         autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         style={styles.input}
         value={password}
         onChangeText={setPassword}
-        placeholder="Password"
+        placeholder="Senha"
         secureTextEntry
       />
       {!isLogin && (
@@ -59,9 +61,9 @@ const AuthScreen = ({ navigation }) => {
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="Name"
+            placeholder="Nome"
           />
-          <Picker
+         <Picker
             selectedValue={userType}
             onValueChange={(itemValue) => setUserType(itemValue)}
             style={styles.picker}
@@ -73,11 +75,11 @@ const AuthScreen = ({ navigation }) => {
         </>
       )}
       <View style={styles.buttonContainer}>
-        <Button title={isLogin ? 'Sign In' : 'Sign Up'} onPress={handleAuthentication} color="#3498db" />
+        <Button title={isLogin ? 'Entrar' : 'Registrar'} onPress={handleAuthentication} color="#3498db" />
       </View>
       <View style={styles.bottomContainer}>
         <Text style={styles.toggleText} onPress={() => setIsLogin(!isLogin)}>
-          {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In'}
+          {isLogin ? 'Precisa de uma conta? Registre-se' : 'Já tem uma conta? Entrar'}
         </Text>
       </View>
     </View>
@@ -92,6 +94,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     elevation: 3,
+    alignSelf: 'center',
+    marginTop: '20%',
   },
   title: {
     fontSize: 24,

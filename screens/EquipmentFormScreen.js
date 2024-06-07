@@ -1,7 +1,5 @@
-// EquipmentFormScreen.js
-
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const EquipmentFormScreen = () => {
@@ -13,53 +11,49 @@ const EquipmentFormScreen = () => {
 
   const handleAddEquipment = async () => {
     try {
-      // Verifica se todos os campos foram preenchidos
-      if (!name || !type || !description) {
-        alert('Please fill in all fields.');
+      if (!name.trim() || !type.trim() || !description.trim()) {
+        Alert.alert('Erro', 'Por favor, preencha todos os campos.');
         return;
       }
-
-      // Cria um novo documento no Firestore com os dados do equipamento
       await setDoc(doc(db, 'equipments', name), {
         name,
         type,
         description,
       });
-
-      // Limpa os campos após o cadastro
       setName('');
       setType('');
       setDescription('');
 
-      alert('Equipment added successfully!');
+      Alert.alert('Sucesso', 'Equipamento adicionado com sucesso!');
     } catch (error) {
-      console.error('Error adding equipment:', error.message);
+      console.error('Erro ao adicionar equipamento:', error.message);
+      Alert.alert('Erro', 'Erro ao adicionar equipamento: ' + error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add New Equipment</Text>
+      <Text style={styles.title}>Adicionar Novo Equipamento</Text>
       <TextInput
         style={styles.input}
         value={name}
         onChangeText={setName}
-        placeholder="Name"
+        placeholder="Nome"
       />
       <TextInput
         style={styles.input}
         value={type}
         onChangeText={setType}
-        placeholder="Type"
+        placeholder="Tipo"
       />
       <TextInput
         style={styles.input}
         value={description}
         onChangeText={setDescription}
-        placeholder="Description"
+        placeholder="Descrição"
         multiline
       />
-      <Button title="Add Equipment" onPress={handleAddEquipment} />
+      <Button title="Adicionar Equipamento" onPress={handleAddEquipment} />
     </View>
   );
 };
@@ -70,18 +64,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#f8f9fa',
   },
   title: {
     fontSize: 24,
     marginBottom: 20,
+    color: '#333',
   },
   input: {
     width: '100%',
     height: 40,
-    borderColor: 'gray',
     borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
     marginBottom: 20,
     paddingHorizontal: 10,
+    backgroundColor: '#fff',
   },
 });
 
