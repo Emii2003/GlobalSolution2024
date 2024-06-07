@@ -4,6 +4,7 @@ import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestam
 import { getAuth, signOut } from 'firebase/auth';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+import { IoFishSharp } from "react-icons/io5";
 
 const HomeScreen = ({ route }) => {
   const { user } = route.params;
@@ -75,6 +76,7 @@ const HomeScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
+      <IoFishSharp  size={50}/>
       <Text style={styles.title}>Bem-vindo, {user.name || user.email}!</Text>
       {user.userType === 'pescador' && (
         <View>
@@ -145,6 +147,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     marginBottom: 20,
+    marginTop: 50
   },
   input: {
     width: '100%',
